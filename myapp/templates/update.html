@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Update Player{% endblock %}
+
+{% block body %}
+<h2>Update Player</h2>
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul style="color:red">
+      {% for msg in messages %}
+        <li>{{ msg }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+
+<form method="POST" action="{{ url_for('user.update_player', player_name=player.player_name) }}">
+    <label>Player Name:</label>
+    <input type="text" name="player_name" value="{{ player.player_name }}" required><br><br>
+
+    <label>Score:</label>
+    <input type="number" name="score" value="{{ player.score }}" required><br><br>
+
+    <button type="submit">Update</button>
+</form>
+
+<p><a href="{{ url_for('user.home') }}">Back to Home</a></p>
+{% endblock %}
