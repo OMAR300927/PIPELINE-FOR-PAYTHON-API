@@ -25,6 +25,25 @@ spec:
       containers:
       - name: flask-container
         image: omarsa999/flask-app:17
+        env:
+          - name: FLASK_SQLALCHEMY_DATABASE_URI
+            valueFrom:
+              secretKeyRef:
+                name: flask-secrets
+                key: FLASK_SQLALCHEMY_DATABASE_URI
+          - name: FLASK_JWT_SECRET_KEY
+            valueFrom:
+              secretKeyRef:
+                name: flask-secrets
+                key: FLASK_JWT_SECRET_KEY
+          - name: FLASK_SECRET_KEY
+            valueFrom:
+              secretKeyRef:
+                name: flask-secrets
+                key: FLASK_SECRET_KEY
+        secretKeyRef:
+          name: flask-secrets
+          key: FLASK_SECRET_KEY
         resources:
           requests:
             cpu: "100m"
