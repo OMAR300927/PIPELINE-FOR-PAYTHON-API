@@ -41,9 +41,6 @@ spec:
               secretKeyRef:
                 name: flask-secrets
                 key: FLASK_SECRET_KEY
-        secretKeyRef:
-          name: flask-secrets
-          key: FLASK_SECRET_KEY
         resources:
           requests:
             cpu: "100m"
