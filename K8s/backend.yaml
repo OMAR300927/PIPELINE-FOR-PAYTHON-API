@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
       - name: flask-container
-        image: omarsa999/flask-app
+        image: omarsa999/flask-app:17
         resources:
           requests:
             cpu: "100m"
