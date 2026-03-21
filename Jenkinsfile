@@ -1,0 +1,85 @@
+pipeline {
+    agent any
+    
+    environment {
+        SCANNER_HOME = tool 'sonar-scanner'
+        USERNAME = 'omarsa999'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git 'https://github.com/OMAR300927/PIPELINE-FOR-PAYTHON-API.git'
+            }
+        }
+        
+        stage('Gitleaks scan') {
+            steps {
+                sh 'gitleaks detect --source ./myapp --exit-code 1'
+            }
+        }
+        
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('sonar-server') {
+                    sh '''
+                    $SCANNER_HOME/bin/sonar-scanner \
+                    -Dsonar.projectName=flask-app \
+                    -Dsonar.projectKey=flask-app \
+                    '''
+                }
+            }
+        }
+        
+        stage('Quality gate') {
+            steps {
+                timeout(time: 10, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true, credentialsId: 'sonar-cred'
+                }
+            }
+        }
+        
+        stage('File system scan') {
+            steps {
+                sh 'trivy fs . --format table -o fs-report.html'
+            }
+        }
+        
+        stage('Build & tag the image') {
+            steps {
+                sh 'docker build -t $USERNAME/flask-app:$BUILD_NUMBER -f myapp/Dockerfile .'
+            }
+        }
+        
+        stage('Scan the image') {
+            steps {
+                sh 'trivy image --timeout 10m --format table -o image-report.html $USERNAME/flask-app:$BUILD_NUMBER'
+            }
+        }
+        
+        stage('Push the image') {
+            steps {
+                withDockerRegistry(credentialsId: 'docker-cred', url: 'https://index.docker.io/v1/') {
+                    sh 'docker push $USERNAME/flask-app:$BUILD_NUMBER'
+                }
+            }
+        }
+
+        stage('Apply Kubernetes manifests') {
+            steps {
+                withKubeConfig([credentialsId: 'kubeconfig']) {
+                    sh 'kubectl apply -f ./K8s/'
+                    sh 'kubectl rollout status deployment/flask-deployment'
+                }
+            }
+        }
+
+        stage('Verify the Deployment') {
+            steps {
+                withKubeConfig([credentialsId: 'kubeconfig']) {
+                    sh 'kubectl get pods -o wide'
+                }
+            }
+        }
+    }
+}
